@@ -1,0 +1,24 @@
+[build-system]
+requires = [ "setuptools >= 35.0.2", "wheel >= 0.29.0" ]
+build-backend = "setuptools.build_meta"
+
+[tool.tox]
+legacy_tox_ini = """
+[tox]
+envlist = py35,py36,py37,py38,py39
+
+[testenv]
+deps = coverage
+       pycodestyle
+       pydoc-markdown
+       pylint
+
+commands = pycodestyle pysigdig test setup.py
+           pylint pysigdig test setup.py
+           coverage run --source=pysigdig -m unittest discover
+           coverage report -m
+           python setup.py sdist
+           bash -c 'pydocmd simple pysigdig++ > doc/api_documentation.md'
+
+whitelist_externals = /bin/bash
+"""
