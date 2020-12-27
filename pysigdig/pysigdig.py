@@ -18,17 +18,90 @@ class Number:
             self.value = value
             self.sigdigs = float('inf')
             self.lsd = float('-inf')
-        if isinstance(value, int):
+        elif isinstance(value, int):
             self.value = value
             self.sigdigs, self.lsd = Number.get_sigdigs_from_int(self.value)
         elif isinstance(value, str):
             self.value, self.sigdigs, self.lsd = Number.parse_string(value)
+        else:
+            raise ValueError(
+                'Invalid type {} provided for argument "value"'.format(
+                    type(value)))
         if 'sigdigs' in kwargs:
             self.sigdigs = kwargs['sigdigs']
         if 'lsd' in kwargs:
             self.lsd = kwargs['lsd']
         if 'tolerance' in kwargs:
             self.tolerance = kwargs['tolerance']
+
+    def __str__(self):
+        raise NotImplementedError
+
+    def __add__(self, other):
+        raise NotImplementedError
+
+    def __sub__(self, other):
+        raise NotImplementedError
+
+    def __mul__(self, other):
+        raise NotImplementedError
+
+    def __truediv__(self, other):
+        raise NotImplementedError
+
+    def __floordiv__(self, other):
+        raise NotImplementedError
+
+    def __mod__(self, other):
+        raise NotImplementedError
+
+    def __pow__(self, other):
+        raise NotImplementedError
+
+    def __lt__(self, other):
+        raise NotImplementedError
+
+    def __gt__(self, other):
+        raise NotImplementedError
+
+    def __le__(self, other):
+        raise NotImplementedError
+
+    def __ge__(self, other):
+        raise NotImplementedError
+
+    def __eq__(self, other):
+        raise NotImplementedError
+
+    def __ne__(self, other):
+        raise NotImplementedError
+
+    def __iadd__(self, other):
+        raise NotImplementedError
+
+    def __isub__(self, other):
+        raise NotImplementedError
+
+    def __imul__(self, other):
+        raise NotImplementedError
+
+    def __idiv__(self, other):
+        raise NotImplementedError
+
+    def __ifloordiv__(self, other):
+        raise NotImplementedError
+
+    def __imod__(self, other):
+        raise NotImplementedError
+
+    def __ipow__(self, other):
+        raise NotImplementedError
+
+    def __neg__(self):
+        raise NotImplementedError
+
+    def __pos__(self):
+        raise NotImplementedError
 
     @staticmethod
     def get_sigdigs_from_int(value: int):
@@ -80,109 +153,3 @@ class Number:
                 sigdigs += 1
             lsd = 1 if string[-1] == '.' else place
         return value, sigdigs, lsd
-
-
-class SigDigNumber:
-    """Dummy"""
-
-    def __init__(self, value: float, significant_digits: int) -> None:
-        self.significant_digits = significant_digits
-        self.value = round(
-            value,
-            self.get_most_significant_digit(value) + significant_digits)
-
-    def __str__(self):
-        return '{}'.format(self.value)
-
-    def __add__(self, other):
-        if isinstance(other, int):
-            raise NotImplementedError
-        ans_sig_digs = max(
-            self.get_most_significant_digit(self.value),
-            other.get_most_significant_digit(other.value)) + \
-            min(
-                abs(self.get_most_significant_digit(self.value) -
-                    self.significant_digits),
-                abs(other.get_most_significant_digit(other.value) -
-                    other.significant_digits))
-        return SigDigNumber(
-            self.value + other.value, ans_sig_digs)
-
-    def __sub__(self, other):
-        raise NotImplementedError
-
-    def __mul__(self, other):
-        if isinstance(other, int):
-            raise NotImplementedError
-        return SigDigNumber(
-            self.value * other.value,
-            min(self.significant_digits, other.significant_digits))
-
-    def __truediv__(self, other):
-        raise NotImplementedError
-
-    def __floordiv__(self, other):
-        raise NotImplementedError
-
-    def __mod__(self, other):
-        raise NotImplementedError
-
-    def __pow__(self, other):
-        raise NotImplementedError
-
-    def __lt__(self, other):
-        raise NotImplementedError
-
-    def __gt__(self, other):
-        raise NotImplementedError
-
-    def __le__(self, other):
-        raise NotImplementedError
-
-    def __ge__(self, other):
-        raise NotImplementedError
-
-    def __eq__(self, other):
-        raise NotImplementedError
-
-    def __ne__(self, other):
-        raise NotImplementedError
-
-    def __isub__(self, other):
-        raise NotImplementedError
-
-    def __iadd__(self, other):
-        raise NotImplementedError
-
-    def __imul__(self, other):
-        raise NotImplementedError
-
-    def __idiv__(self, other):
-        raise NotImplementedError
-
-    def __ifloordiv__(self, other):
-        raise NotImplementedError
-
-    def __imod__(self, other):
-        raise NotImplementedError
-
-    def __ipow__(self, other):
-        raise NotImplementedError
-
-    def __neg__(self):
-        raise NotImplementedError
-
-    def __pos__(self):
-        raise NotImplementedError
-
-    @staticmethod
-    def get_most_significant_digit(num):
-        """Foo"""
-        msd = 0
-        if num > 1:
-            while num / 10 ** (-1 * msd) >= 1:
-                msd -= 1
-        else:
-            while num / 10 ** (-1 * msd) <= 1:
-                msd += 1
-        return msd
