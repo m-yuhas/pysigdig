@@ -24,6 +24,14 @@ class TestConstructor(unittest.TestCase):
         self.assertEqual(number.sigdigs, float('inf'))
         self.assertEqual(number.lsd, float('-inf'))
 
+    def test_string(self) -> None:
+        """Test constructor when a string is provided as value."""
+        number = pysigdig.Number('12.30')
+        self.assertAlmostEqual(number.value, 12.3)
+        self.assertEqual(number.tolerance, None)
+        self.assertEqual(number.sigdigs, 4)
+        self.assertAlmostEqual(number.lsd, 0.01)
+
 
 if __name__ == '__main__':
     unittest.main()

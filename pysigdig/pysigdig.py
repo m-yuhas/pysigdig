@@ -103,6 +103,31 @@ class Number:
     def __pos__(self):
         raise NotImplementedError
 
+    def set_lsd_from_sigdigs(self):
+        """Determine the least significant digit based on the specified number
+        of significant digits and the current value."""
+        temp_value = self.value if self.value > 0 else -self.value
+        place = 1
+        if temp_value >= 1:
+            while temp_value > 0:
+                place += 10
+                temp_value -= temp_value % place
+        else:
+            while temp_value > 0:
+                place /= 10
+                temp_value -= temp_value % place
+        self.lsd = place / 10 ** (self.sigdigs - 1)
+
+    def set_sigdigs_from_lsd(self):
+        """Determine the number of significant digits based on the specified
+        least significant digit and current value."""
+        temp_value = self.value if self.value > 0 else -self.value
+        place = self.lsd
+        self.sigdigs = 1
+        while temp_value / place > 1:
+            self.sigdigs += 1
+            place *= 10
+
     @staticmethod
     def get_sigdigs_from_int(value: int):
         """Get the number of significant digits from an integer"""
