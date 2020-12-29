@@ -24,13 +24,15 @@ class Number:
         elif isinstance(value, str):
             self.value, self.sigdigs, self.lsd = Number.parse_string(value)
         else:
-            raise ValueError(
+            raise TypeError(
                 'Invalid type {} provided for argument "value"'.format(
                     type(value)))
         if 'sigdigs' in kwargs:
             self.sigdigs = kwargs['sigdigs']
+            self.set_lsd_from_sigdigs()
         if 'lsd' in kwargs:
             self.lsd = kwargs['lsd']
+            self.set_sigdigs_from_lsd()
         if 'tolerance' in kwargs:
             self.tolerance = kwargs['tolerance']
 
@@ -106,27 +108,33 @@ class Number:
     def set_lsd_from_sigdigs(self):
         """Determine the least significant digit based on the specified number
         of significant digits and the current value."""
-        temp_value = self.value if self.value > 0 else -self.value
+        temp_value = self.value
+        if temp_value < 0:
+            temp_value = 0 - temp_value
         place = 1
         if temp_value >= 1:
             while temp_value > 0:
-                place += 10
+                place *= 10
                 temp_value -= temp_value % place
+            place /= 10
         else:
-            while temp_value > 0:
+            place = float(place)
+            while temp_value % place == temp_value:
                 place /= 10
-                temp_value -= temp_value % place
-        self.lsd = place / 10 ** (self.sigdigs - 1)
+        self.lsd = float(place) / 10 ** (self.sigdigs - 1)
 
     def set_sigdigs_from_lsd(self):
         """Determine the number of significant digits based on the specified
         least significant digit and current value."""
-        temp_value = self.value if self.value > 0 else -self.value
-        place = self.lsd
+        temp_value = self.value
+        if temp_value < 0:
+            temp_value = 0 - temp_value
+        place = float(self.lsd)
         self.sigdigs = 1
         while temp_value / place > 1:
             self.sigdigs += 1
             place *= 10
+        self.sigdigs -= 1
 
     @staticmethod
     def get_sigdigs_from_int(value: int):
