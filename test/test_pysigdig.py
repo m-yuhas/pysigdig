@@ -48,11 +48,44 @@ class TestConstructor(unittest.TestCase):
     def test_lsd_override(self) -> None:
         """Check that the least significant digit can be overridden with
         optional argument."""
-        number = pysigdig.Number(123.456789, lsd=0.001)
+        number = pysigdig.Number(123.456789, sigdigs=90, lsd=0.001)
         self.assertAlmostEqual(number.value, 123.456789)
         self.assertEqual(number.tolerance, None)
         self.assertEqual(number.sigdigs, 6)
         self.assertAlmostEqual(number.lsd, 0.001)
+
+    def test_tolerance(self) -> None:
+        """Check that a tolerance can be added when calling the
+        constructor."""
+        number = pysigdig.Number(84000, tolerance=10)
+        self.assertAlmostEqual(number.value, 84000)
+        self.assertEqual(number.tolerance, 10)
+        self.assertEqual(number.sigdigs, 2)
+        self.assertEqual(number.lsd, 1000)
+
+
+class TestStringCast(unittest.TestCase):
+    """Test case for cast to string method."""
+
+    def test_trailing_zeros(self) -> None:
+        """Test string cast on number with significant trailing zeros."""
+        number = pysigdig.Number('1234.567890')
+        self.assertEqual(str(number), '1234.567890')
+
+    def test_no_trailing_zeros(self) -> None:
+        """Test string cast on number with no trailing zeros."""
+        number = pysigdig.Number('1234.56789')
+        self.assertEqual(str(number), '1234.56789')
+
+    def test_no_fractional_part(self) -> None:
+        """Test string cast on number with no fractional part."""
+        number = pysigdig.Number('64000')
+        self.assertEqual(str(number), '64000')
+
+    def test_with_tolerance(self) -> None:
+        """Test string cast on number with tolerance."""
+        number = pysigdig.Number('1.23450000', tolerance=0.01)
+        self.assertEqual(str(number), '1.23450000 ± 0.01')
 
 
 if __name__ == '__main__':

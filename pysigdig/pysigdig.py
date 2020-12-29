@@ -2,6 +2,7 @@
 
 
 from typing import Union
+import math
 import re
 
 
@@ -36,8 +37,16 @@ class Number:
         if 'tolerance' in kwargs:
             self.tolerance = kwargs['tolerance']
 
-    def __str__(self):
-        raise NotImplementedError
+    def __str__(self) -> None:
+        digits = int(-math.log10(self.lsd))
+        string = str(round(self.value, digits))
+        if self.lsd >= 1:
+            string = string.split('.')[0]
+        else:
+            string += (digits - len(string.split('.')[1])) * '0'
+        if self.tolerance is not None:
+            string += ' ± {}'.format(self.tolerance)
+        return string
 
     def __add__(self, other):
         raise NotImplementedError
