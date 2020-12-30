@@ -64,8 +64,26 @@ class TestConstructor(unittest.TestCase):
         self.assertEqual(number.lsd, 1000)
 
 
+class TestIntegerCast(unittest.TestCase):
+    """Test case for cast to integer."""
+
+    def test_cast_to_int(self) -> None:
+        """Test a cast to integer."""
+        number = pysigdig.Number('3600')
+        self.assertEqual(int(number), 3600)
+
+
+class TestFloatCast(unittest.TestCase):
+    """Test case for cast to float."""
+
+    def test_cast_to_float(self) -> None:
+        """Test a cast to float."""
+        number = pysigdig.Number('45.6900')
+        self.assertAlmostEqual(float(number), 45.69)
+
+
 class TestStringCast(unittest.TestCase):
-    """Test case for cast to string method."""
+    """Test case for cast to string."""
 
     def test_trailing_zeros(self) -> None:
         """Test string cast on number with significant trailing zeros."""

@@ -37,7 +37,13 @@ class Number:
         if 'tolerance' in kwargs:
             self.tolerance = kwargs['tolerance']
 
-    def __str__(self) -> None:
+    def __int__(self) -> int:
+        return int(float(self))
+
+    def __float__(self) -> float:
+        return float(round(self.value, int(-math.log10(self.lsd))))
+
+    def __str__(self) -> str:
         digits = int(-math.log10(self.lsd))
         string = str(round(self.value, digits))
         if self.lsd >= 1:
