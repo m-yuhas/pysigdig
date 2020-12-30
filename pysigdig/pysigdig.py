@@ -11,42 +11,47 @@ class Number:
     and tolerance."""
 
     def __init__(self, value: Union[int, float, str], **kwargs) -> None:
-        self.tolerance = None
-        self.value = None
-        self.lsd = None
-        self.sigdigs = None
+        self._tolerance = None
+        self._value = None
+        self._lsd = None
+        self._sigdigs = None
         if isinstance(value, float):
-            self.value = value
-            self.sigdigs = float('inf')
-            self.lsd = float('-inf')
+            self._value = value
+            self._sigdigs = float('inf')
+            self._lsd = float('-inf')
         elif isinstance(value, int):
-            self.value = value
-            self.sigdigs, self.lsd = Number.get_sigdigs_from_int(self.value)
+            self._value = value
+            self._sigdigs, self._lsd = Number.get_sigdigs_from_int(value)
         elif isinstance(value, str):
-            self.value, self.sigdigs, self.lsd = Number.parse_string(value)
+            self._value, self._sigdigs, self._lsd = Number.parse_string(value)
         else:
             raise TypeError(
                 'Invalid type {} provided for argument "value"'.format(
                     type(value)))
         if 'sigdigs' in kwargs:
-            self.sigdigs = kwargs['sigdigs']
+            self._sigdigs = kwargs['sigdigs']
             self.set_lsd_from_sigdigs()
         if 'lsd' in kwargs:
-            self.lsd = kwargs['lsd']
+            self._lsd = kwargs['lsd']
             self.set_sigdigs_from_lsd()
         if 'tolerance' in kwargs:
-            self.tolerance = kwargs['tolerance']
+            if isinstance(kwargs['tolerance'], (float, int)):
+                self._tolerance = abs(kwargs['tolerance'])
+            else:
+                self._tolerance = None
 
     def __int__(self) -> int:
         return int(float(self))
 
     def __float__(self) -> float:
-        return float(round(self.value, int(-math.log10(self.lsd))))
+        if self.lsd == float('-inf'):
+            return self._value
+        return float(round(self._value, int(-math.log10(self.lsd))))
 
     def __str__(self) -> str:
         digits = int(-math.log10(self.lsd))
-        string = str(round(self.value, digits))
-        if self.lsd >= 1:
+        string = str(float(self))
+        if self._lsd >= 1:
             string = string.split('.')[0]
         else:
             string += (digits - len(string.split('.')[1])) * '0'
@@ -55,10 +60,46 @@ class Number:
         return string
 
     def __add__(self, other):
-        raise NotImplementedError
+        if isinstance(other, (float, int)):
+            new_value = self._value + other
+            new_lsd = self.lsd
+            new_tolerance = self.tolerance
+        elif isinstance(other, Number):
+            new_value = self._value + other._value
+            new_lsd = max(self.lsd, other.lsd)
+            if self.tolerance is None and other.tolerance is None:
+                new_tolerance = None
+            elif self.tolerance is None and other.tolerance is not None:
+                new_tolerance = other.tolerance
+            elif self.tolerance is not None and other.tolerance is None:
+                new_tolerance = self.tolerance
+            else:
+                new_tolerance = self.tolerance + other.tolerance
+        else:
+            raise TypeError(
+                'Cannot add type {} to Number.'.format(type(other)))
+        return Number(new_value, lsd=new_lsd, tolerance=new_tolerance)
 
     def __sub__(self, other):
-        raise NotImplementedError
+        if isinstance(other, (float, int)):
+            new_value = self._value - other
+            new_lsd = self.lsd
+            new_tolerance = self.tolerance
+        elif isinstance(other, Number):
+            new_value = self._value - other._value
+            new_lsd = max(self.lsd, other.lsd)
+            if self.tolerance is None and other.tolerance is None:
+                new_tolerance = None
+            elif self.tolerance is None and other.tolerance is not None:
+                new_tolerance = other.tolerance
+            elif self.tolerance is not None and other.tolerance is None:
+                new_tolerance = self.tolerance
+            else:
+                new_tolerance = self.tolerance + other.tolerance
+        else:
+            raise TypeError(
+                'Cannot subtract type {} from Number.'.format(type(other)))
+        return Number(new_value, lsd=new_lsd, tolerance=new_tolerance)
 
     def __mul__(self, other):
         raise NotImplementedError
@@ -123,7 +164,7 @@ class Number:
     def set_lsd_from_sigdigs(self):
         """Determine the least significant digit based on the specified number
         of significant digits and the current value."""
-        temp_value = self.value
+        temp_value = self._value
         if temp_value < 0:
             temp_value = 0 - temp_value
         place = 1
@@ -136,20 +177,40 @@ class Number:
             place = float(place)
             while temp_value % place == temp_value:
                 place /= 10
-        self.lsd = float(place) / 10 ** (self.sigdigs - 1)
+        self._lsd = float(place) / 10 ** (self.sigdigs - 1)
 
     def set_sigdigs_from_lsd(self):
         """Determine the number of significant digits based on the specified
         least significant digit and current value."""
-        temp_value = self.value
+        temp_value = self._value
         if temp_value < 0:
             temp_value = 0 - temp_value
         place = float(self.lsd)
-        self.sigdigs = 1
-        while temp_value / place > 1:
-            self.sigdigs += 1
+        self._sigdigs = 1
+        while temp_value / place >= 1:
+            self._sigdigs += 1
             place *= 10
-        self.sigdigs -= 1
+        self._sigdigs -= 1
+
+    @property
+    def value(self):
+        """Foo"""
+        return int(self) if isinstance(self._value, int) else float(self)
+
+    @property
+    def sigdigs(self):
+        """Get sigdigs"""
+        return self._sigdigs
+
+    @property
+    def lsd(self):
+        """Get least significant digit."""
+        return self._lsd
+
+    @property
+    def tolerance(self):
+        """Get tolerance."""
+        return self._tolerance
 
     @staticmethod
     def get_sigdigs_from_int(value: int):

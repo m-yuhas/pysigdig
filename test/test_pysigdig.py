@@ -40,7 +40,7 @@ class TestConstructor(unittest.TestCase):
     def test_sigdig_override(self) -> None:
         """Check that number of sigdigs can be overridden with optional arg."""
         number = pysigdig.Number(1.0002003, sigdigs=5)
-        self.assertAlmostEqual(number.value, 1.0002003)
+        self.assertAlmostEqual(number.value, 1.0002)
         self.assertEqual(number.tolerance, None)
         self.assertEqual(number.sigdigs, 5)
         self.assertAlmostEqual(number.lsd, 1e-4)
@@ -49,7 +49,7 @@ class TestConstructor(unittest.TestCase):
         """Check that the least significant digit can be overridden with
         optional argument."""
         number = pysigdig.Number(123.456789, sigdigs=90, lsd=0.001)
-        self.assertAlmostEqual(number.value, 123.456789)
+        self.assertAlmostEqual(number.value, 123.457)
         self.assertEqual(number.tolerance, None)
         self.assertEqual(number.sigdigs, 6)
         self.assertAlmostEqual(number.lsd, 0.001)
@@ -104,6 +104,98 @@ class TestStringCast(unittest.TestCase):
         """Test string cast on number with tolerance."""
         number = pysigdig.Number('1.23450000', tolerance=0.01)
         self.assertEqual(str(number), '1.23450000 ± 0.01')
+
+
+class TestAdd(unittest.TestCase):
+    """Test case for addition."""
+
+    def test_constant_addition(self) -> None:
+        """Adding an instnace of number to integer or float is treated as
+        addition to a constant with infinited significant digits."""
+        number = pysigdig.Number('0.123', tolerance=0.1) + 5.333333333
+        self.assertAlmostEqual(number.value, 5.456)
+        self.assertEqual(number.tolerance, 0.1)
+        self.assertEqual(number.sigdigs, 4)
+        self.assertAlmostEqual(number.lsd, 0.001)
+
+    def test_addition_no_tolerance(self) -> None:
+        """Add an instance of number to another instance of number, both with
+        no tolerance."""
+        number = pysigdig.Number('98.87') + pysigdig.Number('78.5')
+        self.assertAlmostEqual(number.value, 177.4)
+        self.assertEqual(number.tolerance, None)
+        self.assertEqual(number.sigdigs, 4)
+        self.assertAlmostEqual(number.lsd, 0.1)
+
+    def test_addition_tolerance_on_one_addend(self) -> None:
+        """Add an instance of number to another instance of number, one of
+        which has a defined tolerance."""
+        number = pysigdig.Number('3600', tolerance=10) + pysigdig.Number(0.1)
+        self.assertAlmostEqual(number.value, 3600)
+        self.assertEqual(number.tolerance, 10)
+        self.assertEqual(number.sigdigs, 2)
+        self.assertEqual(number.lsd, 100)
+
+    def test_addition_tolerance_on_both_addends(self) -> None:
+        """Add an instance of number to another instance of number, both of
+        which have a defined tolerance."""
+        number = pysigdig.Number(1, tolerance=0.1) + \
+            pysigdig.Number(2, tolerance=0.1)
+        self.assertEqual(number.value, 3)
+        self.assertEqual(number.tolerance, 0.2)
+        self.assertEqual(number.sigdigs, 1)
+        self.assertEqual(number.lsd, 1)
+
+    def test_addition_invalid_type(self) -> None:
+        """Add an instance of number to an invalid type."""
+        with self.assertRaises(TypeError):
+            print(pysigdig.Number('123') + '123')
+
+
+class TestSubtract(unittest.TestCase):
+    """Test case for subtraction."""
+
+    def test_constant_subtraction(self) -> None:
+        """Subtracting a float or int from  an instnace of number is treated
+        as subtraction of a constant with infinited significant digits."""
+        number = pysigdig.Number('0.123', tolerance=0.1) - 5.333333333
+        self.assertAlmostEqual(number.value, -5.21)
+        self.assertEqual(number.tolerance, 0.1)
+        self.assertEqual(number.sigdigs, 4)
+        self.assertAlmostEqual(number.lsd, 0.001)
+
+    def test_subtraction_no_tolerance(self) -> None:
+        """Subtract an instance of number from another instance of number,
+        both with no tolerance."""
+        number = pysigdig.Number('98.87') - pysigdig.Number('78.5')
+        self.assertAlmostEqual(number.value, 20.4)
+        self.assertEqual(number.tolerance, None)
+        self.assertEqual(number.sigdigs, 3)
+        self.assertAlmostEqual(number.lsd, 0.1)
+
+    def test_subtraction_tolerance_on_one_addend(self) -> None:
+        """Subtract an instance of number from another instance of number,
+        one of which has a defined tolerance."""
+        number = pysigdig.Number('3600', tolerance=10) - pysigdig.Number(0.1)
+        self.assertAlmostEqual(number.value, 3600)
+        self.assertEqual(number.tolerance, 10)
+        self.assertEqual(number.sigdigs, 2)
+        self.assertEqual(number.lsd, 100)
+
+    def test_subtraction_tolerance_on_both_addends(self) -> None:
+        """Subtract an instance of number from another instance of number,
+        both of which have a defined tolerance."""
+        number = pysigdig.Number(1, tolerance=0.1) - \
+            pysigdig.Number(2, tolerance=0.1)
+        self.assertEqual(number.value, -1)
+        self.assertEqual(number.tolerance, 0.2)
+        self.assertEqual(number.sigdigs, 1)
+        self.assertEqual(number.lsd, 1)
+
+    def test_subtraction_invalid_type(self) -> None:
+        """Subtract an invalid type from an instance of number."""
+        with self.assertRaises(TypeError):
+            print(pysigdig.Number('123') - '123')
 
 
 if __name__ == '__main__':
