@@ -59,7 +59,7 @@ class Number:
             string += ' ± {}'.format(self.tolerance)
         return string
 
-    def __add__(self, other):
+    def __add__(self, other) -> 'Number':
         if isinstance(other, (float, int)):
             new_value = self._value + other
             new_lsd = self.lsd
@@ -80,7 +80,7 @@ class Number:
                 'Cannot add type {} to Number.'.format(type(other)))
         return Number(new_value, lsd=new_lsd, tolerance=new_tolerance)
 
-    def __sub__(self, other):
+    def __sub__(self, other) -> 'Number':
         if isinstance(other, (float, int)):
             new_value = self._value - other
             new_lsd = self.lsd
@@ -101,8 +101,24 @@ class Number:
                 'Cannot subtract type {} from Number.'.format(type(other)))
         return Number(new_value, lsd=new_lsd, tolerance=new_tolerance)
 
-    def __mul__(self, other):
-        raise NotImplementedError
+    def __mul__(self, other) -> 'Number':
+        if isinstance(other, (float, int)):
+            new_value = self._value * other
+            new_sigdigs = self.sigdigs
+            new_tolerance = self.tolerance * other
+        elif isinstance(other, Number):
+            new_value = self._value * other._value
+            new_sigdigs = min(self.sigdigs, other.sigdigs)
+            if self.tolerance is None and other.tolerance is None:
+                new_tolerance = None
+            else:
+                new_tolerance = abs((self.tolerance or 0) * other._value) + \
+                    abs((other.tolerance or 0) * self._value) + \
+                    (self.tolerance or 0) * (other.tolerance or 0)
+        else:
+            raise TypeError(
+                'Cannot multiply Number by type {}.'.format(type(other)))
+        return Number(new_value, sigdigs=new_sigdigs, tolerance=new_tolerance)
 
     def __truediv__(self, other):
         raise NotImplementedError
@@ -196,6 +212,20 @@ class Number:
     def value(self):
         """Foo"""
         return int(self) if isinstance(self._value, int) else float(self)
+
+    @property
+    def max_value(self):
+        """Foo"""
+        return max(
+            float(self) + (self.tolerance or 0),
+            float(self) - (self.tolerance or 0))
+
+    @property
+    def min_value(self):
+        """Foo"""
+        return min(
+            float(self) + (self.tolerance or 0),
+            float(self) - (self.tolerance or 0))
 
     @property
     def sigdigs(self):
