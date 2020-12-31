@@ -164,55 +164,78 @@ class Number:
                     type(other)))
         return Number(new_value, sigdigs=new_sigdigs, tolerance=new_tolerance)
 
-    def __mod__(self, other):
+    def __mod__(self, other) -> 'Number':
+        if isinstance(other, (float, int)):
+            new_value = self._value % other
+            new_sigdigs = self.sigdigs
+            new_tolerance = max(
+                abs(abs(new_value) - abs(self.max_value % other)),
+                abs(abs(new_value) - abs(self.min_value % other)))
+        elif isinstance(other, Number):
+            new_value = self._value % other._value
+            new_sigdigs = min(self.sigdigs, other.sigdigs)
+            if self.tolerance is None and other.tolerance is None:
+                new_tolerance = None
+            else:
+                new_tolerance = max(
+                    abs(
+                        abs(new_value) -
+                        abs(self.max_value % other.min_value)),
+                    abs(
+                        abs(new_value) -
+                        abs(self.min_value % other.max_value)))
+        else:
+            raise TypeError(
+                'Cannot perform modulo deivision on Number by type {}'.format(
+                    type(other)))
+        return Number(new_value, sigdigs=new_sigdigs, tolerance=new_tolerance)
+
+    def __pow__(self, other) -> 'Number':
         raise NotImplementedError
 
-    def __pow__(self, other):
+    def __lt__(self, other) -> bool:
         raise NotImplementedError
 
-    def __lt__(self, other):
+    def __gt__(self, other) -> bool:
         raise NotImplementedError
 
-    def __gt__(self, other):
+    def __le__(self, other) -> bool:
         raise NotImplementedError
 
-    def __le__(self, other):
+    def __ge__(self, other) -> bool:
         raise NotImplementedError
 
-    def __ge__(self, other):
+    def __eq__(self, other) -> bool:
         raise NotImplementedError
 
-    def __eq__(self, other):
+    def __ne__(self, other) -> bool:
         raise NotImplementedError
 
-    def __ne__(self, other):
+    def __iadd__(self, other) -> 'Number':
         raise NotImplementedError
 
-    def __iadd__(self, other):
+    def __isub__(self, other) -> 'Number':
         raise NotImplementedError
 
-    def __isub__(self, other):
+    def __imul__(self, other) -> 'Number':
         raise NotImplementedError
 
-    def __imul__(self, other):
+    def __idiv__(self, other) -> 'Number':
         raise NotImplementedError
 
-    def __idiv__(self, other):
+    def __ifloordiv__(self, other) -> 'Number':
         raise NotImplementedError
 
-    def __ifloordiv__(self, other):
+    def __imod__(self, other) -> 'Number':
         raise NotImplementedError
 
-    def __imod__(self, other):
+    def __ipow__(self, other) -> 'Number':
         raise NotImplementedError
 
-    def __ipow__(self, other):
+    def __neg__(self) -> 'Number':
         raise NotImplementedError
 
-    def __neg__(self):
-        raise NotImplementedError
-
-    def __pos__(self):
+    def __pos__(self) -> 'Number':
         raise NotImplementedError
 
     def set_lsd_from_sigdigs(self):

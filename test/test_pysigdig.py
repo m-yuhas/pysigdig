@@ -337,5 +337,52 @@ class TestFloorDivide(unittest.TestCase):
             print(pysigdig.Number('123') // '123')
 
 
+class TestModuloDivide(unittest.TestCase):
+    """Test case for modulo division."""
+
+    def test_modulodivide_by_constant(self) -> None:
+        """Modulo division of an instance of number by a float or int is
+        treated as floor division by a constant with infinite significant
+        digits."""
+        number = pysigdig.Number('0.123', tolerance=0.1) % 5.333333333
+        self.assertAlmostEqual(number.value, 0.123)
+        self.assertAlmostEqual(number.tolerance, 0.1)
+        self.assertEqual(number.sigdigs, 3)
+        self.assertAlmostEqual(number.lsd, 0.001)
+
+    def test_modulodivide_no_tolerance(self) -> None:
+        """Modulo division of an instance of number by another instance of
+        number, both with no tolerance."""
+        number = pysigdig.Number('98.87') % pysigdig.Number('78.5')
+        self.assertAlmostEqual(number.value, 20.4)
+        self.assertEqual(number.tolerance, None)
+        self.assertEqual(number.sigdigs, 3)
+        self.assertAlmostEqual(number.lsd, 0.1)
+
+    def test_modulodivide_tolerance_on_one_factor(self) -> None:
+        """Modulo division of an instance of number by another instance of
+        number, one of which has a defined tolerance."""
+        number = pysigdig.Number('3600', tolerance=10) % pysigdig.Number(0.1)
+        self.assertAlmostEqual(number.value, 0.1)
+        self.assertAlmostEqual(number.tolerance, 0)
+        self.assertEqual(number.sigdigs, 2)
+        self.assertEqual(number.lsd, 0.001)
+
+    def test_modulodivide_tolerance_on_both_factors(self) -> None:
+        """Modulo division of an instance of number by another instance of
+        number, both of which have a defined tolerance."""
+        number = pysigdig.Number(1, tolerance=0.1) % \
+            pysigdig.Number(2, tolerance=0.1)
+        self.assertEqual(number.value, 1)
+        self.assertAlmostEqual(number.tolerance, 0.1)
+        self.assertEqual(number.sigdigs, 1)
+        self.assertEqual(number.lsd, 1)
+
+    def test_modulodivide_invalid_type(self) -> None:
+        """Modulo division by an invlaid type."""
+        with self.assertRaises(TypeError):
+            print(pysigdig.Number('123') % '123')
+
+
 if __name__ == '__main__':
     unittest.main()
