@@ -69,12 +69,8 @@ class Number:
             new_lsd = max(self.lsd, other.lsd)
             if self.tolerance is None and other.tolerance is None:
                 new_tolerance = None
-            elif self.tolerance is None and other.tolerance is not None:
-                new_tolerance = other.tolerance
-            elif self.tolerance is not None and other.tolerance is None:
-                new_tolerance = self.tolerance
             else:
-                new_tolerance = self.tolerance + other.tolerance
+                new_tolerance = (self.tolerance or 0) + (other.tolerance or 0)
         else:
             raise TypeError(
                 'Cannot add type {} to Number.'.format(type(other)))
@@ -90,12 +86,8 @@ class Number:
             new_lsd = max(self.lsd, other.lsd)
             if self.tolerance is None and other.tolerance is None:
                 new_tolerance = None
-            elif self.tolerance is None and other.tolerance is not None:
-                new_tolerance = other.tolerance
-            elif self.tolerance is not None and other.tolerance is None:
-                new_tolerance = self.tolerance
             else:
-                new_tolerance = self.tolerance + other.tolerance
+                new_tolerance = (self.tolerance or 0) + (other.tolerance or 0)
         else:
             raise TypeError(
                 'Cannot subtract type {} from Number.'.format(type(other)))
@@ -121,7 +113,27 @@ class Number:
         return Number(new_value, sigdigs=new_sigdigs, tolerance=new_tolerance)
 
     def __truediv__(self, other):
-        raise NotImplementedError
+        if isinstance(other, (float, int)):
+            new_value = self._value / other
+            new_sigdigs = self.sigdigs
+            new_tolerance = self.tolerance / other
+        elif isinstance(other, Number):
+            new_value = self._value / other._value
+            new_sigdigs = min(self.sigdigs, other.sigdigs)
+            if self.tolerance is None and other.tolerance is None:
+                new_tolerance = None
+            else:
+                new_tolerance = max(
+                    abs(
+                        abs(new_value) -
+                        abs(self.max_value / other.min_value)),
+                    abs(
+                        abs(new_value) -
+                        abs(self.min_value / other.max_value)))
+        else:
+            raise TypeError(
+                'Cannot divide Number by type {}.'.format(type(other)))
+        return Number(new_value, sigdigs=new_sigdigs, tolerance=new_tolerance)
 
     def __floordiv__(self, other):
         raise NotImplementedError
@@ -265,7 +277,7 @@ class Number:
         """Parse a string and return it's value, significant digits and least
         significant digit."""
         string = string.strip().lstrip('0')
-        if re.match(r'\d*\.?\d*', string).group() == '':
+        if re.match(r'\-?\d*\.?\d*', string).group() == '':
             raise ValueError('String could not be cast to number')
         decimal_index = string.find('.')
         value = 0
@@ -277,8 +289,9 @@ class Number:
                 value += int(string[i]) * place
                 if string[i] != '0' and lsd is None:
                     lsd = place
+                if lsd is not None:
+                    sigdigs += 1
                 place *= 10
-                sigdigs += 1
         else:
             place = 1
             for i in range(decimal_index - 1, -1, -1):
@@ -291,4 +304,4 @@ class Number:
                 value += int(string[i]) * place
                 sigdigs += 1
             lsd = 1 if string[-1] == '.' else place
-        return value, sigdigs, lsd
+        return -value if string[0] == '-' else value, sigdigs, lsd
