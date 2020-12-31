@@ -112,7 +112,7 @@ class Number:
                 'Cannot multiply Number by type {}.'.format(type(other)))
         return Number(new_value, sigdigs=new_sigdigs, tolerance=new_tolerance)
 
-    def __truediv__(self, other):
+    def __truediv__(self, other) -> 'Number':
         if isinstance(other, (float, int)):
             new_value = self._value / other
             new_sigdigs = self.sigdigs
@@ -135,8 +135,34 @@ class Number:
                 'Cannot divide Number by type {}.'.format(type(other)))
         return Number(new_value, sigdigs=new_sigdigs, tolerance=new_tolerance)
 
-    def __floordiv__(self, other):
-        raise NotImplementedError
+    def __floordiv__(self, other) -> 'Number':
+        if isinstance(other, (float, int)):
+            new_value = self._value // other
+            new_sigdigs = min(
+                self.sigdigs,
+                Number.get_sigdigs_from_int(new_value)[0])
+            new_tolerance = abs(new_value) - abs(self.max_value / other)
+        elif isinstance(other, Number):
+            new_value = self._value // other._value
+            new_sigdigs = min(
+                self.sigdigs,
+                other.sigdigs,
+                Number.get_sigdigs_from_int(new_value)[0])
+            if self.tolerance is None and other.tolerance is None:
+                new_tolerance = None
+            else:
+                new_tolerance = max(
+                    abs(
+                        abs(new_value) -
+                        abs(self.max_value / other.min_value)),
+                    abs(
+                        abs(new_value) -
+                        abs(self.min_value / other.max_value)))
+        else:
+            raise TypeError(
+                'Cannot perform floor division on Number by type {}.'.format(
+                    type(other)))
+        return Number(new_value, sigdigs=new_sigdigs, tolerance=new_tolerance)
 
     def __mod__(self, other):
         raise NotImplementedError
@@ -201,6 +227,9 @@ class Number:
                 place *= 10
                 temp_value -= temp_value % place
             place /= 10
+        elif temp_value == 0:
+            self._lsd = 1
+            return
         else:
             place = float(place)
             while temp_value % place == temp_value:
@@ -259,6 +288,8 @@ class Number:
         """Get the number of significant digits from an integer"""
         if value < 0:
             value = -value
+        if value == 0:
+            return 1, 1
         place = 1
         lsd = None
         count = 0

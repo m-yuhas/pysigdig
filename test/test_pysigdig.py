@@ -285,9 +285,56 @@ class TestTrueDivide(unittest.TestCase):
         self.assertEqual(number.lsd, 0.1)
 
     def test_truedivide_invalid_type(self) -> None:
-        """Dividey an invalid type by an instance of number."""
+        """Divide an instance of number by an invalid type."""
         with self.assertRaises(TypeError):
             print(pysigdig.Number('123') / '123')
+
+
+class TestFloorDivide(unittest.TestCase):
+    """Test case for floor division."""
+
+    def test_floordivide_by_constant(self) -> None:
+        """Floor division of an instance of number by a float or int is
+        treated as floor division by a constant with infinite significant
+        digits."""
+        number = pysigdig.Number('0.123', tolerance=0.1) // 5.333333333
+        self.assertAlmostEqual(number.value, 0)
+        self.assertAlmostEqual(number.tolerance, 0.0418125)
+        self.assertEqual(number.sigdigs, 1)
+        self.assertAlmostEqual(number.lsd, 1)
+
+    def test_floordivide_no_tolerance(self) -> None:
+        """Floor division of an instance of number by another instance of
+        number, both with no tolerance."""
+        number = pysigdig.Number('98.87') // pysigdig.Number('78.5')
+        self.assertAlmostEqual(number.value, 1)
+        self.assertEqual(number.tolerance, None)
+        self.assertEqual(number.sigdigs, 1)
+        self.assertAlmostEqual(number.lsd, 1)
+
+    def test_floordivide_tolerance_on_one_factor(self) -> None:
+        """Floor division of an instance of number by another instance of
+        number, one of which has a defined tolerance."""
+        number = pysigdig.Number('3600', tolerance=10) // pysigdig.Number(0.1)
+        self.assertAlmostEqual(number.value, 36000)
+        self.assertEqual(number.tolerance, 101)
+        self.assertEqual(number.sigdigs, 2)
+        self.assertEqual(number.lsd, 1000)
+
+    def test_floordivide_tolerance_on_both_factors(self) -> None:
+        """Floor division of an instance of number by another instance of
+        number, both of which have a defined tolerance."""
+        number = pysigdig.Number(1, tolerance=0.1) // \
+            pysigdig.Number(2, tolerance=0.1)
+        self.assertEqual(number.value, 0)
+        self.assertAlmostEqual(number.tolerance, 0.578947368)
+        self.assertEqual(number.sigdigs, 1)
+        self.assertEqual(number.lsd, 1)
+
+    def test_floordivide_invalid_type(self) -> None:
+        """Floor division by an invlaid type."""
+        with self.assertRaises(TypeError):
+            print(pysigdig.Number('123') // '123')
 
 
 if __name__ == '__main__':
