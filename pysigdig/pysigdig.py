@@ -97,7 +97,10 @@ class Number:
         if isinstance(other, (float, int)):
             new_value = self._value * other
             new_sigdigs = self.sigdigs
-            new_tolerance = self.tolerance * other
+            if self.tolerance is None:
+                new_tolerance = None
+            else:
+                new_tolerance = self.tolerance * other
         elif isinstance(other, Number):
             new_value = self._value * other._value
             new_sigdigs = min(self.sigdigs, other.sigdigs)
@@ -116,7 +119,10 @@ class Number:
         if isinstance(other, (float, int)):
             new_value = self._value / other
             new_sigdigs = self.sigdigs
-            new_tolerance = self.tolerance / other
+            if self.tolerance is None:
+                new_tolerance = None
+            else:
+                new_tolerance = self.tolerance / other
         elif isinstance(other, Number):
             new_value = self._value / other._value
             new_sigdigs = min(self.sigdigs, other.sigdigs)
@@ -141,7 +147,10 @@ class Number:
             new_sigdigs = min(
                 self.sigdigs,
                 Number.get_sigdigs_from_int(new_value)[0])
-            new_tolerance = abs(new_value) - abs(self.max_value / other)
+            if self.tolerance is None:
+                new_tolerance = None
+            else:
+                new_tolerance = abs(new_value) - abs(self.max_value / other)
         elif isinstance(other, Number):
             new_value = self._value // other._value
             new_sigdigs = min(
@@ -168,9 +177,12 @@ class Number:
         if isinstance(other, (float, int)):
             new_value = self._value % other
             new_sigdigs = self.sigdigs
-            new_tolerance = max(
-                abs(abs(new_value) - abs(self.max_value % other)),
-                abs(abs(new_value) - abs(self.min_value % other)))
+            if self.tolerance is None:
+                new_tolerance = None
+            else:
+                new_tolerance = max(
+                    abs(abs(new_value) - abs(self.max_value % other)),
+                    abs(abs(new_value) - abs(self.min_value % other)))
         elif isinstance(other, Number):
             new_value = self._value % other._value
             new_sigdigs = min(self.sigdigs, other.sigdigs)
@@ -191,52 +203,70 @@ class Number:
         return Number(new_value, sigdigs=new_sigdigs, tolerance=new_tolerance)
 
     def __pow__(self, other) -> 'Number':
-        raise NotImplementedError
+        if isinstance(other, (float, int)):
+            new_value = self._value ** other
+            new_sigdigs = self.sigdigs
+            if self.tolerance is None:
+                new_tolerance = None
+            else:
+                new_tolerance = max(
+                    abs(abs(new_value) - abs(self.max_value ** other)),
+                    abs(abs(new_value) - abs(self.min_value ** other)))
+        else:
+            raise TypeError(
+                'Only exponentiating by a constant (float or int) is '
+                'supported.')
+        return Number(new_value, sigdigs=new_sigdigs, tolerance=new_tolerance)
 
     def __lt__(self, other) -> bool:
-        raise NotImplementedError
+        return self.max_value < other.min_value
 
     def __gt__(self, other) -> bool:
-        raise NotImplementedError
+        return self.min_value > other.max_value
 
     def __le__(self, other) -> bool:
-        raise NotImplementedError
+        return self.max_value < other.max_value
 
     def __ge__(self, other) -> bool:
-        raise NotImplementedError
+        return self.min_value > other.min_value
 
     def __eq__(self, other) -> bool:
-        raise NotImplementedError
+        return (
+            self.value == other.value and self.sigdigs == other.sigdigs and
+            self.tolerance == other.tolerance and self.lsd == other.lsd)
 
     def __ne__(self, other) -> bool:
-        raise NotImplementedError
+        return not self == other
 
     def __iadd__(self, other) -> 'Number':
-        raise NotImplementedError
+        return self + other
 
     def __isub__(self, other) -> 'Number':
-        raise NotImplementedError
+        return self - other
 
     def __imul__(self, other) -> 'Number':
-        raise NotImplementedError
+        return self * other
 
     def __idiv__(self, other) -> 'Number':
-        raise NotImplementedError
+        return self / other
 
     def __ifloordiv__(self, other) -> 'Number':
-        raise NotImplementedError
+        return self // other
 
     def __imod__(self, other) -> 'Number':
-        raise NotImplementedError
+        return self % other
 
     def __ipow__(self, other) -> 'Number':
-        raise NotImplementedError
+        return self ** other
 
     def __neg__(self) -> 'Number':
-        raise NotImplementedError
+        return Number(
+            -self.value,
+            sigdigs=self.sigdigs,
+            tolerance=self.tolerance)
 
     def __pos__(self) -> 'Number':
-        raise NotImplementedError
+        return self
 
     def set_lsd_from_sigdigs(self):
         """Determine the least significant digit based on the specified number
